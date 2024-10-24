@@ -1,0 +1,16 @@
+---------------------------------------------------------------------------------------------
+For Simmulation:
+python3 .\run_experiments_with_plots_and_stats.py
+
+python3 .\Combined_Scheduler_Plot.py
+
+python3 .\logs.py
+
+python3 .\mean.py
+
+python3 .\aggregate_and_plot_energy.py
+---------------------------------------------------------------------------------------------
+
+For Induvidual Seed Testing: 
+python3 batch_bin_packing__<Basline>.py --seed <Number> > stdout_Defult.txt 2> stderr_Defult.txt
+
