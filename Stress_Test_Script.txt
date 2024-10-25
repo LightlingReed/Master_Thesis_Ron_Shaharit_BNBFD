@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Define the correct IP address of compute3
+compute3_ip="192.168.0.103"  # Replace with the actual IP address of compute3
+
+# Define the range of percentages for CPU load, Memory usage, Disk I/O, etc.
+percentage_values=(0 20 40 60 80 90)  # Less granular
+cpu_cores=(1 4 8 12)  # Fewer core options
+
+# Set a minimum value for vm-bytes (in KB)
+MIN_VM_BYTES=4
+
+# Output file to save cumulative results
+output_file="energy_consumption_log.txt"
+
+# Check if the file exists; if not, create it and add headers
+if [ ! -f "$output_file" ]; then
+    echo "CPU_Cores CPU_Load Memory_Usage Disk_IO Network_Bandwidth Compute1_Watts Compute3_Watts" > "$output_file"
+fi
+
+# Function to retrieve and parse power consumption from the API
+get_power_consumption() {
+    api_url="http://192.168.0.2:5000/metrics"
+    response=$(curl -s "$api_url")
+
+    # Extracting power consumption values for compute1 and compute3
+    compute1_watts=$(echo "$response" | grep -oP 'epdu_watts{node="compute1"} \K[0-9]+')
+    compute3_watts=$(echo "$response" | grep -oP 'epdu_watts{node="compute3"} \K[0-9]+')
+
+    echo "$compute1_watts $compute3_watts"
+}
+
+# Iterate over all combinations of the parameters
+for cores in "${cpu_cores[@]}"; do
+    for cpu_load in "${percentage_values[@]}"; do
+        for mem_usage in "${percentage_values[@]}"; do
+            for disk_io in "${percentage_values[@]}"; do
+                for net_bandwidth in "${percentage_values[@]}"; do
+
+                    echo "Running test with CPU Cores: $cores, CPU Load: $cpu_load%, Memory Usage: $mem_usage%, Disk I/O: $disk_io%, Network Bandwidth: $net_bandwidth%"
+
+                    # Calculate memory size in KB, ensuring it's within the valid range
+                    mem_size=$((mem_usage * 16 * 1024 * 1024 / 100))
+                    vm_bytes=$(($mem_size > $MIN_VM_BYTES ? $mem_size : $MIN_VM_BYTES))
